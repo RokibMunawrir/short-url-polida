@@ -1,0 +1,17 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import LoginForm from "../../components/ui/Login";
+import { auth } from "../../lib/auth";
+
+const session = await auth.api.getSession({
+  headers: Astro.request.headers,
+});
+
+if (session) {
+  return Astro.redirect("/dashboard");
+}
+---
+
+<Layout title="Login | Politeknik Darussalam Blokagung">
+  <LoginForm client:load />
+</Layout>

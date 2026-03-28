@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1774438643072,
+      "tag": "0000_stormy_deadpool",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774441447657,
+      "tag": "0001_striped_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774495645775,
+      "tag": "0002_graceful_archangel",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1774619216498,
+      "tag": "0003_cute_hex",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1774665158314,
+      "tag": "0004_parched_christian_walker",
+      "breakpoints": true
+    }
+  ]
+}

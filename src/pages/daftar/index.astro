@@ -1,0 +1,31 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import List from "../../components/admin/list";
+import { getAllUrls } from "../../db/queri/url";
+import { auth } from "../../lib/auth";
+
+// Check session
+const session = await auth.api.getSession({
+  headers: Astro.request.headers,
+});
+
+if (!session) {
+  return Astro.redirect("/login");
+}
+
+// Read sidebar state from cookie for SSR support (Eliminates Flick)
+const sidebarMinimized = Astro.cookies.get('sidebar-minimized')?.value === 'true';
+
+// Fetch all URLs on the server
+const initialUrls = await getAllUrls();
+const userRole = session.user.role;
+---
+
+<Layout>
+    <List 
+        client:only="react" 
+        initialMinimized={sidebarMinimized} 
+        initialUrls={initialUrls}
+        userRole={userRole ?? "User"}
+    />
+</Layout>

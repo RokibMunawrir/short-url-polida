@@ -1,0 +1,36 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Dashboard from "../../components/admin/Dashboard";
+import { getDashboardStats, getRecentUrls, getTopUsers } from "../../db/queri/url";
+import { auth } from "../../lib/auth";
+
+// Check session
+const session = await auth.api.getSession({
+  headers: Astro.request.headers,
+});
+
+if (!session) {
+  return Astro.redirect("/login");
+}
+
+// Read sidebar state from cookie for SSR support
+const sidebarMinimized =
+  Astro.cookies.get("sidebar-minimized")?.value === "true";
+
+// Fetch data on the server
+const stats = await getDashboardStats();
+const recentUrls = await getRecentUrls(3);
+const topUsers = await getTopUsers(3);
+const userRole = session.user.role;
+---
+
+<Layout title="Dashboard | Politeknik Darussalam Blokagung">
+  <Dashboard 
+    client:load 
+    initialMinimized={sidebarMinimized} 
+    serverStats={stats}
+    recentUrls={recentUrls}
+    topUsers={topUsers}
+    userRole={userRole ?? "User"}
+  />
+</Layout>

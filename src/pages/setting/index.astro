@@ -1,0 +1,33 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SettingPage from "../../components/admin/setting";
+import { auth } from "../../lib/auth";
+import { getUserSessions } from "../../db/queri/session";
+
+// Check session
+const session = await auth.api.getSession({
+  headers: Astro.request.headers,
+});
+
+if (!session) {
+  return Astro.redirect("/login");
+}
+
+// Read sidebar state from cookie for SSR support
+const sidebarMinimized =
+  Astro.cookies.get("sidebar-minimized")?.value === "true";
+
+const userRole = session.user.role;
+const user = session.user;
+const sessions = await getUserSessions(user.id);
+---
+
+<Layout title="Pengaturan | Politeknik Darussalam Blokagung">
+  <SettingPage 
+    client:load 
+    initialMinimized={sidebarMinimized} 
+    userRole={userRole ?? "User"}
+    currentUser={user}
+    initialSessions={sessions}
+  />
+</Layout>

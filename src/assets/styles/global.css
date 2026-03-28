@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@source "../**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}";
+
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  --sidebar-width: 11.25rem; /* Default w-45 */
+  --content-margin: 0px;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --content-margin: 11.25rem; /* sm:ml-45 */
+  }
+  html[data-sidebar-minimized="true"] {
+    --sidebar-width: 4rem; /* sm:w-16 */
+    --content-margin: 4rem; /* sm:ml-16 */
+  }
+}

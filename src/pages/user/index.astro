@@ -1,0 +1,26 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import UserPage from "../../components/admin/user";
+import { getAllUsers } from "../../db/queri/user";
+import { auth } from "../../lib/auth";
+
+// Check session and role
+const session = await auth.api.getSession({
+  headers: Astro.request.headers,
+});
+
+if (!session || (session.user as any).role !== "Admin") {
+  return Astro.redirect("/dashboard?error=unauthorized");
+}
+
+// Read sidebar state from cookie for SSR support
+const sidebarMinimized =
+  Astro.cookies.get("sidebar-minimized")?.value === "true";
+
+// Fetch initial users
+const initialUsers = await getAllUsers();
+---
+
+<Layout title="Manajemen User | Politeknik Darussalam Blokagung">
+  <UserPage client:load initialMinimized={sidebarMinimized} initialUsers={initialUsers} userRole={(session.user as any).role ?? "User"} />
+</Layout>

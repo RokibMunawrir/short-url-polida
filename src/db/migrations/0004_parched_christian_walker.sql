@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `deleted_at` timestamp(3);
