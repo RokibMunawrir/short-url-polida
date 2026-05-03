@@ -1,7 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Dashboard from "../../components/admin/Dashboard";
-import { getDashboardStats, getRecentUrls, getTopUsers } from "../../db/queri/url";
+import { getDashboardStats, getRecentUrls, getTopUsers, getMonthlyStats } from "../../db/queri/url";
 import { auth } from "../../lib/auth";
 
 // Check session
@@ -21,6 +21,7 @@ const sidebarMinimized =
 const stats = await getDashboardStats();
 const recentUrls = await getRecentUrls(3);
 const topUsers = await getTopUsers(3);
+const monthlyStats = await getMonthlyStats();
 const userRole = session.user.role;
 ---
 
@@ -31,6 +32,7 @@ const userRole = session.user.role;
     serverStats={stats}
     recentUrls={recentUrls}
     topUsers={topUsers}
+    monthlyStats={monthlyStats}
     userRole={userRole ?? "User"}
   />
 </Layout>

@@ -1,0 +1,20 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import InactiveComponent from '../../components/ui/inactive';
+
+export const prerender = false;
+---
+
+<Layout title="URL Inactive | Ringkas URL Polida">
+  <main>
+    <InactiveComponent client:load />
+  </main>
+</Layout>
+
+<style>
+  main {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+</style>

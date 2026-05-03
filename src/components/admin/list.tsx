@@ -42,6 +42,8 @@ const List = ({
         status: 'Active'
     });
 
+    const [validationError, setValidationError] = useState<string | null>(null);
+
     const [alert, setAlert] = useState<{ type: 'success' | 'warning' | 'error', message: string, isVisible: boolean }>({
         type: 'success',
         message: '',
@@ -61,6 +63,7 @@ const List = ({
     }, []);
 
     const handleOpenModal = (url: UrlItem | null = null) => {
+        setValidationError(null);
         if (url) {
             setEditingUrl(url);
             setUrlData({
@@ -77,6 +80,11 @@ const List = ({
     };
 
     const handleSubmit = async () => {
+        if (urlData.shortCode.includes(' ')) {
+            setValidationError('Custom link tidak boleh mengandung spasi!');
+            return;
+        }
+
         const action = editingUrl ? actions.url.update : actions.url.create;
         const input = editingUrl 
             ? { id: editingUrl.id, ...urlData } 
@@ -316,6 +324,14 @@ const List = ({
                 }
             >
                 <div className="space-y-4">
+                    {validationError && (
+                        <Alert 
+                            type="warning" 
+                            message={validationError} 
+                            onClose={() => setValidationError(null)}
+                            className="mb-2"
+                        />
+                    )}
                     <div>
                         <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">URL Asal</label>
                         <input 
@@ -344,7 +360,16 @@ const List = ({
                                 placeholder="custom-link"
                                 className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-semibold"
                                 value={urlData.shortCode}
-                                onChange={(e) => setUrlData({...urlData, shortCode: e.target.value})}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val.includes(' ')) {
+                                        setValidationError('Custom link tidak boleh mengandung spasi!');
+                                        setUrlData({...urlData, shortCode: val.replace(/\s/g, '')});
+                                    } else {
+                                        setValidationError(null);
+                                        setUrlData({...urlData, shortCode: val});
+                                    }
+                                }}
                             />
                         </div>
                         <div>

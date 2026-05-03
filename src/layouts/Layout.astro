@@ -5,6 +5,10 @@ const Description = Astro.props.description || "Ringkas URL Polida Blokagung";
 const Keywords = Astro.props.keywords || "Ringkas URL Polida Blokagung";
 const Author = Astro.props.author || "Politeknik Darussalam Blokagung";
 const Image = Astro.props.image || "/favicon.ico";
+const ogTitle = Astro.props.ogTitle || Title;
+const ogDescription = Astro.props.ogDescription || Description;
+const ogImage = Astro.props.ogImage || Image;
+const ogUrl = Astro.props.ogUrl || Astro.url.pathname;
 
 // Read sidebar state from cookie for SSR support (Eliminates Flick)
 const sidebarMinimized = Astro.cookies.get('sidebar-minimized')?.value === 'true';
@@ -22,6 +26,20 @@ const sidebarMinimized = Astro.cookies.get('sidebar-minimized')?.value === 'true
 		<meta name="description" content={Description} />
 		<meta name="keywords" content={Keywords} />
 		<meta name="author" content={Author} />
+		<meta property="og:title" content={ogTitle} />
+		<meta property="og:description" content={ogDescription} />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:url" content={ogUrl} />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Ringkas URL Polida Blokagung" />
+		<meta property="og:locale" content="id_ID" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={ogTitle} />
+		<meta name="twitter:description" content={ogDescription} />
+		<meta name="twitter:image" content={ogImage} />
+		<meta name="twitter:site" content="@polidablokagung" />
+		<meta name="twitter:creator" content="@polidablokagung" />
+		
 		<script is:inline>
 			const theme = (() => {
 				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {

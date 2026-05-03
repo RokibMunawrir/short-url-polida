@@ -10,12 +10,14 @@ const Dashboard = ({
     serverStats = { totalUrls: 0, totalClicks: 0, userAktif: 0, clickRate: 0 },
     recentUrls: serverUrls = [],
     topUsers: serverTopUsers = [],
+    monthlyStats: serverMonthlyStats = [],
     userRole = "User"
 }: { 
     initialMinimized?: boolean,
     serverStats?: { totalUrls: number, totalClicks: number, userAktif: number, clickRate: number },
     recentUrls?: any[],
     topUsers?: any[],
+    monthlyStats?: { month: string, value: number }[],
     userRole?: string
 }) => {
     const baseUrl = import.meta.env.PUBLIC_BASE_URL || 'http://localhost:4321';
@@ -27,6 +29,8 @@ const Dashboard = ({
         title: '',
         shortCode: ''
     });
+
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     const [alert, setAlert] = useState<{ type: 'success' | 'warning' | 'error', message: string, isVisible: boolean }>({
         type: 'success',
@@ -53,14 +57,19 @@ const Dashboard = ({
         { name: 'Click Rate', value: `${serverStats.clickRate}%`, icon: '📈', change: 'Live', color: 'amber' },
     ];
 
-    const monthlyStats = [
-        { month: 'Jan', value: 45 },
-        { month: 'Feb', value: 52 },
-        { month: 'Mar', value: 38 },
-        { month: 'Apr', value: 65 },
-        { month: 'Mei', value: 48 },
-        { month: 'Jun', value: 72 },
-    ];
+    const monthlyStats = serverMonthlyStats.length > 0 
+        ? serverMonthlyStats 
+        : [
+            { month: 'Jan', value: 0 },
+            { month: 'Feb', value: 0 },
+            { month: 'Mar', value: 0 },
+            { month: 'Apr', value: 0 },
+            { month: 'Mei', value: 0 },
+            { month: 'Jun', value: 0 },
+        ];
+
+    // Calculate max value for chart scaling
+    const maxMonthlyValue = Math.max(...monthlyStats.map(m => m.value), 1);
 
     const topUsers = serverTopUsers.length > 0 
         ? serverTopUsers.map(u => ({
@@ -72,6 +81,9 @@ const Dashboard = ({
             { name: 'Belum ada data', urls: 0, clicks: 0 },
         ];
 
+    // Calculate max value for top users scaling
+    const maxTopUserUrl = Math.max(...topUsers.map(u => u.urls), 1);
+
     const recentUrls = serverUrls.map(u => ({
         short: `${baseUrl}/${u.shortCode}`,
         long: u.originalUrl,
@@ -80,6 +92,11 @@ const Dashboard = ({
     }));
 
     const handleCreateUrl = async () => {
+        if (newUrlData.shortCode.includes(' ')) {
+            setValidationError('Custom link tidak boleh mengandung spasi!');
+            return;
+        }
+
         const { data, error } = await actions.url.create({
             ...newUrlData,
             userId: 'user_1'
@@ -175,10 +192,10 @@ const Dashboard = ({
                                 <div key={i} className="flex-1 flex flex-col items-center gap-3 group relative z-10">
                                     <div 
                                         className="w-full max-w-[40px] bg-gradient-to-t from-blue-600 to-indigo-500 rounded-t-xl transition-all duration-500 group-hover:from-blue-500 group-hover:to-indigo-400 relative"
-                                        style={{ height: `${m.value}%` }}
+                                        style={{ height: `${(m.value / maxMonthlyValue) * 100}%` }}
                                     >
                                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {m.value}%
+                                            {m.value} URL
                                         </div>
                                     </div>
                                     <span className="text-[11px] font-black text-gray-400 uppercase tracking-tight">{m.month}</span>
@@ -193,17 +210,24 @@ const Dashboard = ({
                         {/* User Stats Card */}
                         <div className="bg-gradient-to-br from-indigo-700 to-purple-800 p-6 rounded-[2rem] text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden group">
                             <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-                            <h3 className="text-sm font-black uppercase tracking-widest text-indigo-100 mb-6">Top User Bulan Ini</h3>
+                            <h3 className="text-sm font-black uppercase tracking-widest text-indigo-100 mb-6">Top User Teraktif</h3>
                             <div className="space-y-4">
                                 {topUsers.map((u, i) => (
-                                    <div key={i} className="flex items-center justify-between pb-3 border-b border-white/10 last:border-0 last:pb-0">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-black border border-white/20">
-                                                {u.name.charAt(0)}
+                                    <div key={i} className="space-y-2 group/user">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-black border border-white/20 group-hover/user:scale-110 transition-transform">
+                                                    {u.name.charAt(0)}
+                                                </div>
+                                                <span className="text-xs font-bold truncate max-w-[120px]">{u.name}</span>
                                             </div>
-                                            <span className="text-xs font-bold">{u.name}</span>
                                         </div>
-                                        <span className="text-xs font-black bg-white/10 px-2 py-1 rounded-lg">{u.urls} URL</span>
+                                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                            <div 
+                                                className="h-full bg-gradient-to-r from-blue-400 to-indigo-300 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+                                                style={{ width: `${(u.urls / maxTopUserUrl) * 100}%` }}
+                                            ></div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -332,6 +356,14 @@ const Dashboard = ({
                 }
             >
                 <div className="space-y-4">
+                    {validationError && (
+                        <Alert 
+                            type="warning" 
+                            message={validationError} 
+                            onClose={() => setValidationError(null)}
+                            className="mb-2"
+                        />
+                    )}
                     <div>
                         <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">URL Asal</label>
                         <input 
@@ -361,7 +393,16 @@ const Dashboard = ({
                                 placeholder="custom-link"
                                 className="flex-1 px-5 py-4 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-semibold"
                                 value={newUrlData.shortCode}
-                                onChange={(e) => setNewUrlData({...newUrlData, shortCode: e.target.value})}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val.includes(' ')) {
+                                        setValidationError('Custom link tidak boleh mengandung spasi!');
+                                        setNewUrlData({...newUrlData, shortCode: val.replace(/\s/g, '')});
+                                    } else {
+                                        setValidationError(null);
+                                        setNewUrlData({...newUrlData, shortCode: val});
+                                    }
+                                }}
                             />
                         </div>
                     </div>

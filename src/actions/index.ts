@@ -23,9 +23,34 @@ export const server = {
           throw new Error("Short Code sudah digunakan. Silakan gunakan yang lain.");
         }
 
+        // Fetch OG Metadata
+        let ogData = { title: input.title, description: '', image: '' };
+        try {
+          const response = await fetch(input.originalUrl, { 
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' },
+            signal: AbortSignal.timeout(3000) // 3s timeout
+          });
+          const html = await response.text();
+          
+          const getMeta = (prop: string) => {
+            const match = html.match(new RegExp(`<meta[^>]+(?:property|name)=["'](?:og:)?${prop}["'][^>]+content=["']([^"']+)["']`, 'i'))
+                       || html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["'](?:og:)?${prop}["']`, 'i'));
+            return match ? match[1] : null;
+          };
+
+          ogData.title = input.title || getMeta('title') || html.match(/<title>([^<]+)<\/title>/i)?.[1] || '';
+          ogData.description = getMeta('description') || '';
+          ogData.image = getMeta('image') || '';
+        } catch (e) {
+          console.error("Metadata fetch failed:", e);
+        }
+
         await createUrl({
           originalUrl: input.originalUrl,
-          title: input.title,
+          title: ogData.title,
+          ogTitle: ogData.title,
+          ogDescription: ogData.description,
+          ogImage: ogData.image,
           shortCode: shortCode,
           userId: input.userId,
           clicks: 0,
@@ -125,7 +150,7 @@ export const server = {
         id: z.string(),
         name: z.string().min(2).optional(),
         username: z.string().min(3).optional(),
-        email: z.string().email().optional(),
+        email: z.email().optional(),
         role: z.enum(["Admin", "Editor", "User"]).optional(),
       }),
       handler: async (input) => {

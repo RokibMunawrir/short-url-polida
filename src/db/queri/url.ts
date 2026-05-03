@@ -1,5 +1,5 @@
 import { db } from "../index.ts";
-import { eq, count, sum, isNull, and, ne, sql } from "drizzle-orm";
+import { eq, count, sum, isNull, and, ne, sql, gte, asc } from "drizzle-orm";
 import { urls, clicks } from "../schema/schema.ts";
 import { user } from "../schema/auth-schema.ts";
 import { desc } from "drizzle-orm";
@@ -71,17 +71,64 @@ export async function getDashboardStats() {
 }
 
 export async function getTopUsers(limit: number = 3) {
-    return await db.select({
+    const result = await db.select({
         name: user.name,
-        urlsCount: count(urls.id),
-        totalClicks: sum(urls.clicks)
+        urlsCount: sql<string>`count(${urls.id})`,
+        totalClicks: sql<string>`sum(${urls.clicks})`
     })
     .from(user)
-    .leftJoin(urls, eq(user.id, urls.userId))
+    .innerJoin(urls, and(
+        eq(user.id, urls.userId),
+        isNull(urls.deletedAt)
+    ))
     .where(isNull(user.deletedAt))
     .groupBy(user.id, user.name)
-    .orderBy(desc(sql`sum(${urls.clicks})`))
+    .orderBy(desc(sql`count(${urls.id})`))
     .limit(limit);
+
+    return result.map(r => ({
+        name: r.name,
+        urlsCount: parseInt(r.urlsCount) || 0,
+        totalClicks: parseInt(r.totalClicks) || 0
+    }));
+}
+
+export async function getMonthlyStats() {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    
+    // Get last 6 months list starting from 5 months ago
+    const last6 = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        last6.push({
+            month: months[d.getMonth()],
+            yearMonth: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+            value: 0
+        });
+    }
+
+    const startOfRange = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    const result = await db.select({
+        yearMonth: sql<string>`DATE_FORMAT(${urls.createdAt}, '%Y-%m')`,
+        count: count(urls.id)
+    })
+    .from(urls)
+    .where(and(
+        isNull(urls.deletedAt),
+        gte(urls.createdAt, startOfRange)
+    ))
+    .groupBy(sql`DATE_FORMAT(${urls.createdAt}, '%Y-%m')`);
+
+    // Merge results with our 6-month list to ensure all months are present
+    return last6.map(m => {
+        const row = result.find(r => r.yearMonth === m.yearMonth);
+        return {
+            month: m.month,
+            value: Number(row?.count ?? 0)
+        };
+    });
 }
 
 export async function recordClick(urlId: string, clickData: { device?: string, browser?: string, ip?: string, location?: string }) {

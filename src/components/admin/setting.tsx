@@ -20,7 +20,8 @@ const SettingPage = ({
         email: 'admin@polida.ac.id',
         username: 'admin_utama',
         role: userRole,
-        image: null
+        image: null,
+        createdAt: new Date().toISOString()
     });
     const [alert, setAlert] = useState<{ type: 'success' | 'warning' | 'error', message: string, isVisible: boolean }>({
         type: 'success',
@@ -127,7 +128,9 @@ const SettingPage = ({
                             {user.role}
                         </span>
                         <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-1">{user.name}</h1>
-                        <p className="text-sm font-semibold text-gray-400 dark:text-gray-500 italic">Dikelola sejak 12 Januari 2024</p>
+                        <p className="text-sm font-semibold text-gray-400 dark:text-gray-500 italic transition-all group-hover:text-blue-500">
+                            Terdaftar sejak {new Date(user.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
                     </div>
                 </div>
 
